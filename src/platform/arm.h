@@ -5,7 +5,6 @@
 #include <arm_neon.h>
 #include <cstddef>
 #include <cstdint>
-#include <tuple>
 
 namespace gxhash {
 
@@ -27,7 +26,7 @@ GXHASH_ALWAYS_INLINE state load_unaligned(const state *p) {
 
 GXHASH_ALWAYS_INLINE state get_partial_safe(const state *data, size_t len) {
   // Temporary buffer filled with zeros
-  int8_t buffer[VECTOR_SIZE];
+  int8_t buffer[VECTOR_SIZE] = {0};
   int8_t indices_array[] = {0, 1, 2,  3,  4,  5,  6,  7,
                             8, 9, 10, 11, 12, 13, 14, 15};
   state indices = vld1q_s8(indices_array);

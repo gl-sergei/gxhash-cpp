@@ -15,7 +15,11 @@ static constexpr uint32_t KEYS[12] = {
 
 } // namespace gxhash
 
+#ifdef __x86_64__
+#include "platform/x86.h"
+#elif __aarch64__
 #include "platform/arm.h"
+#endif
 
 namespace gxhash {
 
