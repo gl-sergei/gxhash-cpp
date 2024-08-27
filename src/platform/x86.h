@@ -21,12 +21,16 @@ GXHASH_ALWAYS_INLINE state create_seed(int64_t seed) {
   return _mm_set1_epi64x(seed);
 }
 
-GXHASH_ALWAYS_INLINE state load_unaligned(const state *p) {
-  return _mm_loadu_si128(p);
+GXHASH_ALWAYS_INLINE state load_unaligned(const state *&p) {
+  auto tmp = p;
+  p++;
+  return _mm_loadu_si128(tmp);
 }
 
-GXHASH_ALWAYS_INLINE __m256i load_unaligned_x2(const __m256i *p) {
-  return _mm256_loadu_si256(p);
+GXHASH_ALWAYS_INLINE __m256i load_unaligned_x2(const __m256i *&p) {
+  auto tmp = p;
+  p += 2;
+  return _mm256_loadu_si256(tmp);
 }
 
 GXHASH_ALWAYS_INLINE state get_partial_safe(const state *data, size_t len) {
@@ -77,14 +81,14 @@ GXHASH_ALWAYS_INLINE state compress_8(const state *ptr, const state *end,
   state lane2 = hash_vector;
 
   while (ptr < end) {
-    auto v0 = load_unaligned(ptr++);
-    auto v1 = load_unaligned(ptr++);
-    auto v2 = load_unaligned(ptr++);
-    auto v3 = load_unaligned(ptr++);
-    auto v4 = load_unaligned(ptr++);
-    auto v5 = load_unaligned(ptr++);
-    auto v6 = load_unaligned(ptr++);
-    auto v7 = load_unaligned(ptr++);
+    auto v0 = load_unaligned(ptr);
+    auto v1 = load_unaligned(ptr);
+    auto v2 = load_unaligned(ptr);
+    auto v3 = load_unaligned(ptr);
+    auto v4 = load_unaligned(ptr);
+    auto v5 = load_unaligned(ptr);
+    auto v6 = load_unaligned(ptr);
+    auto v7 = load_unaligned(ptr);
 
     auto tmp1 = aes_encrypt(v0, v2);
     auto tmp2 = aes_encrypt(v1, v3);
@@ -117,10 +121,10 @@ GXHASH_ALWAYS_INLINE state compress_8(const state *ptr, const state *end,
   auto t = _mm256_setzero_si256();
   auto lane = _mm256_set_m128i(hash_vector, hash_vector);
   while (ptr < end) {
-    auto v0 = load_unaligned_x2(ptr256++);
-    auto v1 = load_unaligned_x2(ptr256++);
-    auto v2 = load_unaligned_x2(ptr256++);
-    auto v3 = load_unaligned_x2(ptr256++);
+    auto v0 = load_unaligned_x2(ptr256);
+    auto v1 = load_unaligned_x2(ptr256);
+    auto v2 = load_unaligned_x2(ptr256);
+    auto v3 = load_unaligned_x2(ptr256);
 
     ptr += 8;
 
@@ -128,7 +132,8 @@ GXHASH_ALWAYS_INLINE state compress_8(const state *ptr, const state *end,
     tmp = _mm256_aesenc_epi128(tmp, v2);
     tmp = _mm256_aesenc_epi128(tmp, v3);
 
-    t = _mm256_add_epi8(t, _mm256_loadu_si256(reinterpret_cast<const __m256i*>(KEYS)));
+    t = _mm256_add_epi8(
+        t, _mm256_loadu_si256(reinterpret_cast<const __m256i *>(KEYS)));
 
     lane = _mm256_aesenclast_epi128(_mm256_aesenc_epi128(tmp, t), lane);
   }

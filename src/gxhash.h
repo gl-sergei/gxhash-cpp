@@ -1,3 +1,5 @@
+#pragma once
+
 #include "compiler.h"
 
 #include <cstddef>
@@ -52,8 +54,11 @@ static inline state finalize(state hash) {
   return hash;
 }
 
-GXHASH_ALWAYS_INLINE state load_unaligned(const uint8_t *ptr) {
-  return load_unaligned(reinterpret_cast<const state *>(ptr));
+GXHASH_ALWAYS_INLINE state load_unaligned(const uint8_t *&ptr) {
+  auto tmp = reinterpret_cast<const state *>(ptr);
+  auto s = load_unaligned(tmp);
+  ptr = reinterpret_cast<const uint8_t *>(tmp);
+  return s;
 }
 
 GXHASH_ALWAYS_INLINE state compress_many(const state *ptr, const state *end,
@@ -71,7 +76,7 @@ GXHASH_ALWAYS_INLINE state compress_many(const state *ptr, const state *end,
 
   // Process first individual blocks until we have a whole number of 8 blocks
   while (ptr < end_address) {
-    auto v0 = load_unaligned(ptr++);
+    auto v0 = load_unaligned(ptr);
     hash_vector = aes_encrypt(hash_vector, v0);
   }
 
@@ -100,7 +105,6 @@ GXHASH_ALWAYS_INLINE state compress_all(const uint8_t *input, size_t len) {
   size_t extra_bytes_count = len % VECTOR_SIZE;
   if (extra_bytes_count == 0) {
     auto v0 = load_unaligned(ptr);
-    ptr += VECTOR_SIZE;
     hash_vector = v0;
   } else {
     // If the input length does not match the length of a whole number of SIMD
@@ -113,18 +117,15 @@ GXHASH_ALWAYS_INLINE state compress_all(const uint8_t *input, size_t len) {
   }
 
   auto v0 = load_unaligned(ptr);
-  ptr += VECTOR_SIZE;
 
   if (len > VECTOR_SIZE * 2) {
     // Fast path when input length > 32 and <= 48
     auto v = load_unaligned(ptr);
-    ptr += VECTOR_SIZE;
     v0 = aes_encrypt(v0, v);
 
     if (len > VECTOR_SIZE * 3) {
       // Fast path when input length > 48 and <= 64
       auto v = load_unaligned(ptr);
-      ptr += VECTOR_SIZE;
       v0 = aes_encrypt(v0, v);
 
       if (len > VECTOR_SIZE * 4) {

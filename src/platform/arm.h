@@ -20,8 +20,10 @@ GXHASH_ALWAYS_INLINE state create_seed(int64_t seed) {
   return vreinterpretq_s8_s64(vdupq_n_s64(seed));
 }
 
-GXHASH_ALWAYS_INLINE state load_unaligned(const state *p) {
-  return vld1q_s8(reinterpret_cast<const int8_t *>(p));
+GXHASH_ALWAYS_INLINE state load_unaligned(const state *&p) {
+  auto tmp = p;
+  p++;
+  return vld1q_s8(reinterpret_cast<const int8_t *>(tmp));
 }
 
 GXHASH_ALWAYS_INLINE state get_partial_safe(const state *data, size_t len) {
@@ -84,14 +86,14 @@ GXHASH_ALWAYS_INLINE state compress_8(const state *ptr, const state *end,
   state lane2 = hash_vector;
 
   while (ptr < end) {
-    state v0 = load_unaligned(ptr++);
-    state v1 = load_unaligned(ptr++);
-    state v2 = load_unaligned(ptr++);
-    state v3 = load_unaligned(ptr++);
-    state v4 = load_unaligned(ptr++);
-    state v5 = load_unaligned(ptr++);
-    state v6 = load_unaligned(ptr++);
-    state v7 = load_unaligned(ptr++);
+    state v0 = load_unaligned(ptr);
+    state v1 = load_unaligned(ptr);
+    state v2 = load_unaligned(ptr);
+    state v3 = load_unaligned(ptr);
+    state v4 = load_unaligned(ptr);
+    state v5 = load_unaligned(ptr);
+    state v6 = load_unaligned(ptr);
+    state v7 = load_unaligned(ptr);
 
     state tmp1 = aes_encrypt(v0, v2);
     state tmp2 = aes_encrypt(v1, v3);
