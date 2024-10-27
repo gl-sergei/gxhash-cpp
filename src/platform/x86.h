@@ -5,7 +5,11 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#if defined(_MSC_VER)
+#include <intrin.h>
+#else
 #include <x86intrin.h>
+#endif
 
 namespace gxhash {
 
@@ -158,10 +162,12 @@ GXHASH_ALWAYS_INLINE state load_u32(uint32_t x) { return _mm_set1_epi32(x); }
 
 GXHASH_ALWAYS_INLINE state load_u64(uint64_t x) { return _mm_set1_epi64x(x); }
 
+#if !defined(_MSC_VER)
 GXHASH_ALWAYS_INLINE state load_u128(__uint128_t x) {
   auto ptr = (const __m128i *)&x;
   return _mm_loadu_si128(ptr);
 }
+#endif
 
 GXHASH_ALWAYS_INLINE state load_i8(int8_t x) { return _mm_set1_epi8(x); }
 
@@ -171,10 +177,12 @@ GXHASH_ALWAYS_INLINE state load_i32(int32_t x) { return _mm_set1_epi32(x); }
 
 GXHASH_ALWAYS_INLINE state load_i64(int64_t x) { return _mm_set1_epi64x(x); }
 
+#if !defined(_MSC_VER)
 GXHASH_ALWAYS_INLINE state load_i128(__int128_t x) {
   auto ptr = (const __m128i *)&x;
   return _mm_loadu_si128(ptr);
 }
+#endif
 
 } // namespace impl
 

@@ -17,7 +17,7 @@ static constexpr uint32_t KEYS[12] = {
 
 } // namespace gxhash
 
-#ifdef __x86_64__
+#if defined(__x86_64__) || defined(_M_X64)
 #include "platform/x86.h"
 #elif __aarch64__
 #include "platform/arm.h"
@@ -159,10 +159,12 @@ GXHASH_ALWAYS_INLINE uint64_t gxhash64(const uint8_t *in, size_t len,
   return *(reinterpret_cast<uint64_t *>(&hash));
 }
 
+#if !defined(_MSC_VER)
 GXHASH_ALWAYS_INLINE __int128 gxhash128(const uint8_t *in, size_t len,
                                         uint64_t seed) {
   impl::state hash = impl::gxhash(in, len, impl::create_seed(seed));
   return *(reinterpret_cast<__int128 *>(&hash));
 }
+#endif
 
 } // namespace gxhash
